@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ -n "$1" ]; then
+    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --title=webcam
+else
+    pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --title=webcam
+fi
