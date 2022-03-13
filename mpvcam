@@ -5,10 +5,10 @@ main () {
 	if [ "$1" = "--help" -o "$1" = "-h" ]; then
 	    help
 	else
-	    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --title=webcam
+	    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --title=webcam
     fi
     else
-	pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --title=webcam
+	pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --title=webcam
     fi
 }
 
