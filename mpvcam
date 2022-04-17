@@ -21,7 +21,11 @@ main () {
 }
 
 help() {
-    printf "Usage: mpvcam [#] (defaults to 0 if not specified)\n"
+    printf "Usage: mpvcam [#] (defaults to 0 if not specified)
+
+Options:
+-t|--toggle │ hide/unhide mpvcam
+\n"
 }
 
 main "$@"
