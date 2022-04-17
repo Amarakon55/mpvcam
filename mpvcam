@@ -4,11 +4,19 @@ main () {
     if [ -n "$1" ]; then
 	if [ "$1" = "--help" -o "$1" = "-h" ]; then
 	    help
+	elif [ "$1" = "-t" -o "$1" = "--toggle" ]; then
+	    check=$(xdotool search --onlyvisible --name Webcam | wc -l)
+
+	    if [ $check -ge 1 ]; then
+		xdotool windowunmap $(xdotool search --name Webcam)
+	    else
+		xdotool windowmap $(xdotool search --name Webcam)
+	    fi
 	else
-	    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --title=webcam
+	    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --title=Webcam
     fi
     else
-	pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --title=webcam
+	pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --title=Webcam
     fi
 }
 
