@@ -1,35 +1,55 @@
 #!/bin/sh
 
-main () {
-    if [ -n "$1" ]; then
-	if [ "$1" = "--help" -o "$1" = "-h" ]; then
-	    help
-	elif [ "$1" = "-t" -o "$1" = "--toggle" ]; then
-	    if [ $(ps axh | grep "mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --really-quiet --title=Webcam" | wc -l) -le 1 ]; then
-		cmd
-	    elif [ $(xdotool search --onlyvisible --name Webcam | wc -l) -ge 1 ]; then
-		xdotool windowunmap $(xdotool search --name Webcam)
-	    else
-		xdotool windowmap $(xdotool search --name Webcam)
-	    fi
+main () { parse_opts "$@"
+    cmd="mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$camera --untimed --cache=no --force-seekable=no --no-osc --script-opts-add=osc-visibility=never --really-quiet --title=Webcam"
+
+    if [ -n "$toggle" ]; then
+	if [ $(ps axh | grep "$cmd" | wc -l) -le 1 ]; then
+	    cmd
+	elif [ $(xdotool search --onlyvisible --name Webcam | wc -l) -ge 1 ]; then
+	    xdotool windowunmap $(xdotool search --name Webcam)
 	else
-	    pkill -f /dev/video$@ || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$@ --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --really-quiet --title=Webcam
-    fi
+	    xdotool windowmap $(xdotool search --name Webcam)
+	fi
     else
 	cmd
     fi
 }
 
-cmd() {
-   pkill -f /dev/video0 || mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video0 --untimed --cache=no --force-seekable=no --no-osc --no-input-default-bindings --really-quiet --title=Webcam
-}
+cmd() { pkill -f /dev/video0 || $cmd; }
 
-help() {
-    printf "Usage: mpvcam [#] (defaults to 0 if not specified)
+help() { echo -n "Usage: `basename $0` [options] [camera #]
 
 Options:
--t|--toggle │ hide/unhide mpvcam
-\n"
+-t|--toggle │ Hide/unhide `basename $0`
+-h|--help   │ Print this help message and exit
+"; }
+
+parse_opts() {
+    : "${config_dir:=${XDG_CONFIG_HOME:-$HOME/.config}/`basename $0`}"
+    : "${config_file:=$config_dir/`basename $0`.conf}"
+    [ -f "$config_file" ] && . "$config_file"
+
+    die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
+    needs_arg() { [ -z "$OPTARG" ] && die "No arg for --$OPT option"; }
+
+    while getopts ht-: OPT; do
+	# support long options: https://stackoverflow.com/a/28466267/519360
+	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
+	    OPT="${OPTARG%%=*}"       # extract long option name
+	    OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+	    OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+	    h | help)     	help ; exit 0 ;;
+	    t | toggle)		toggle=1 ;;
+	    ??*)          	die "Illegal option --$OPT" ;;  # bad long option
+	    ?)            	exit 2 ;;  # bad short option (error reported via getopts)
+	esac
+    done
+    shift $((OPTIND-1)) # remove parsed options and args from $@ list
+
+    [ -n "$1" ] && camera=$1 || camera=0
 }
 
 main "$@"
