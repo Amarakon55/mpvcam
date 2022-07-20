@@ -16,7 +16,7 @@ main () { parse_opts "$@"
     fi
 }
 
-cmd() { pkill -f /dev/video0 || $cmd; }
+cmd() { pkill -f /dev/video$camera || $cmd; }
 
 help() { echo -n "Usage: `basename $0` [options] [camera #]
 
