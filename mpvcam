@@ -4,21 +4,21 @@ main () { parse_opts "$@"
     cmd="mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$camera --untimed --cache=no --force-seekable=no --no-osc --script-opts-add=osc-visibility=never --really-quiet --title=Webcam"
 
     if [ -n "$toggle" ]; then
-	if [ $(ps axh | grep "$cmd" | wc -l) -le 1 ]; then
-	    cmd
-	elif [ $(xdotool search --onlyvisible --name Webcam | wc -l) -ge 1 ]; then
-	    xdotool windowunmap $(xdotool search --name Webcam)
-	else
-	    xdotool windowmap $(xdotool search --name Webcam)
-	fi
-    else
-	cmd
-    fi
+	if [ $(ps axh | grep "$cmd" | wc -l) -le 1 ]; then cmd
+	elif [ $(xdotool search --onlyvisible --name Webcam | wc -l) -ge 1 ]
+	then xdotool windowunmap $(xdotool search --name Webcam)
+	else xdotool windowmap $(xdotool search --name Webcam); fi
+    else cmd; fi
 }
 
-cmd() { pkill -f /dev/video$camera || $cmd; }
+cmd() {
+    active() { ps x | grep "$cmd"; }
+    if [ $(active | wc -l) -gt 1 ]; then
+	active | head -1 | awk {'print $1'} | xargs kill
+    else $cmd; fi
+}
 
-help() { printf "Usage: $(basename $0) [options] [camera #]
+help() { printf 'Usage:\t%s' "$(basename $0) [options] [camera #]
 
 Options:
 -t|--toggle │ Hide/unhide $(basename $0)
@@ -30,24 +30,31 @@ parse_opts() {
     : "${config_file:=$config_dir/$(basename $0).conf}"
     [ -f "$config_file" ] && . "$config_file"
 
-    die() { printf "$*\n" >&2; exit 2; }  # complain to STDERR and exit with error
-    needs_arg() { [ -z "$OPTARG" ] && die "No arg for --$OPT option"; }
+    needs_arg() {
+	if [ -z "$OPTARG" ]; then
+	    printf '%s\n' "No arg for --$OPT option" >&2
+	    exit 2
+	fi
+    }
 
     while getopts ht-: OPT; do
-	# support long options: https://stackoverflow.com/a/28466267/519360
-	if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
-	    OPT="${OPTARG%%=*}"       # extract long option name
-	    OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
-	    OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	# Support long options: https://stackoverflow.com/a/28466267/519360
+	if [ "$OPT" = "-" ]; then
+	    OPT="${OPTARG%%=*}"
+	    OPTARG="${OPTARG#$OPT}"
+	    OPTARG="${OPTARG#=}"
 	fi
 	case "$OPT" in
 	    h | help)     	help ; exit 0 ;;
 	    t | toggle)		toggle=1 ;;
-	    ??*)          	die "Illegal option --$OPT" ;;  # bad long option
-	    ?)            	exit 2 ;;  # bad short option (error reported via getopts)
+	    ??*)
+		printf '%s\n' "Illegal option --$OPT" >&2 
+		exit 2
+		;;
+	    ?)            	exit 2 ;;
 	esac
     done
-    shift $((OPTIND-1)) # remove parsed options and args from $@ list
+    shift $((OPTIND-1))
 
     [ -n "$1" ] && camera=$1 || camera=0
 }
