@@ -1,7 +1,7 @@
 #!/bin/sh
 
 main () { parse_opts "$@"
-	cmd="mpv --pause=no --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$camera --untimed --cache=no --force-seekable=no --no-osc --script-opts-add=osc-visibility=never --really-quiet --title=Webcam"
+	cmd="mpv --pause=no --panscan=1 --profile=low-latency --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:/dev/video$camera --untimed --cache=no --force-seekable=no --no-osc --script-opts-add=osc-visibility=never --really-quiet --title=Webcam"
 
 	if [ -n "$toggle" ]; then
 		if [ $(ps axh | grep "$cmd" | wc -l) -le 1 ]; then cmd
